@@ -26,8 +26,8 @@ Modern Linux kernels (6.1–6.12) power everything from a Raspberry Pi to an NVI
 ## Quick Start
 
 ```bash
-git clone <your-repo-url>
-cd demand-paging-experiment
+git clone https://github.com/arunsingh/linux_page_cache-lab.git
+cd linux_page_caching
 ./scripts/build_all.sh
 ./scripts/run_lab.sh          # list available labs
 ./scripts/run_lab.sh 8        # paging intro
