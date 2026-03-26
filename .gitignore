@@ -3,6 +3,12 @@ bin/
 *.out
 *.o
 
+# Root-level compiled binaries (lab outputs built locally)
+/demand_paging
+/page_cache_models
+/pm_exercises
+/lab_*
+
 # macOS
 .DS_Store
 .DS_Store?
