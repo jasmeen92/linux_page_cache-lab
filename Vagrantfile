@@ -26,10 +26,9 @@ Vagrant.configure("2") do |config|
   # ---------------------------------------------------------------------------
   # Box
   # ---------------------------------------------------------------------------
-  # Debian 11 Bullseye: stable LTS, matches most university Linux servers.
-  # Kernel 5.10 LTS ships by default; upgrade to 6.x via provision if needed.
-  config.vm.box         = "debian/bullseye64"
-  config.vm.box_version = "11.20241217.1"
+  # bento/ubuntu-22.04-arm64: official ARM64 box, works with vagrant-qemu on Apple Silicon.
+  # Kernel 5.15 LTS ships by default; upgrade to 6.x via provision if needed.
+  config.vm.box         = "perk/ubuntu-2204-arm64"
   config.vm.hostname    = "os-labs"
 
   # ---------------------------------------------------------------------------
@@ -51,21 +50,18 @@ Vagrant.configure("2") do |config|
     rsync__args:    ["--archive", "--delete", "--compress"]
 
   # ---------------------------------------------------------------------------
-  # Provider: VirtualBox
+  # Provider: QEMU (Apple Silicon / ARM64)
   # ---------------------------------------------------------------------------
-  config.vm.provider "virtualbox" do |vb|
-    vb.name   = "os-labs"
-    vb.memory = "4096"   # 4 GB: room for page-cache fill experiments
-    vb.cpus   = 2        # 2 CPUs: context-switch + multi-process labs
-
-    # Paravirt provider = KVM: better VM clock & scheduler accuracy
-    vb.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
-
-    # Enable PAE/NX for x86 page table labs
-    vb.customize ["modifyvm", :id, "--pae", "on"]
-
-    # Disable USB to reduce footprint
-    vb.customize ["modifyvm", :id, "--usb", "off"]
+  # Uses macOS Hypervisor.framework (HVF) for near-native performance.
+  # vagrant-qemu plugin required: vagrant plugin install vagrant-qemu
+  config.vm.provider :qemu do |qe|
+    qe.arch       = "aarch64"
+    qe.machine    = "virt,accel=hvf,highmem=on"
+    qe.cpu        = "host"
+    qe.net_device = "virtio-net-pci"
+    qe.memory     = "4096"  # 4 GB: room for page-cache fill experiments
+    qe.smp        = "cpus=2,sockets=1,cores=2,threads=1"
+    qe.ssh_port   = "50023"  # explicit port; avoids collision with other QEMU VMs on 50022
   end
 
   # ---------------------------------------------------------------------------
@@ -83,7 +79,7 @@ Vagrant.configure("2") do |config|
     apt-get install -y --no-install-recommends \
         build-essential gcc gdb make \
         strace ltrace \
-        linux-perf procps \
+        linux-tools-generic procps \
         htop iotop sysstat \
         util-linux \
         numactl \
